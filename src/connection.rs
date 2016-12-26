@@ -1,12 +1,10 @@
-extern crate libc;
-
 use std::ffi::*;
 use std::{string, ptr, mem, slice};
 use virt;
 use node::NodeInfo;
 use domain::VirDomain;
 use error::VirError;
-use self::libc::funcs::c95::stdlib;
+use super::libc;
 
 #[derive(Clone)]
 pub struct Connection {
@@ -79,15 +77,15 @@ impl Connection {
     pub fn version(&self) -> Result<u64, VirError> {
         unsafe {
             let size = mem::size_of::<*mut u64>() as libc::size_t;
-            let v: *mut u64 = stdlib::malloc(size) as *mut u64;
+            let v: *mut u64 = libc::malloc(size) as *mut u64;
             match virt::virConnectGetVersion(self.conn, v) != -1 {
                 true => {
                     let ver = v;
-                    stdlib::free(v as *mut libc::types::common::c95::c_void);
+                    libc::free(v as *mut libc::c_void);
                     Ok(ver as u64)
                 },
                 false => {
-                    stdlib::free(v as *mut libc::types::common::c95::c_void);
+                    libc::free(v as *mut libc::c_void);
                     Err(VirError::new())
                 }
             }
@@ -97,15 +95,15 @@ impl Connection {
     pub fn libvirt_version(&self) -> Result<u64, VirError> {
         unsafe {
             let size = mem::size_of::<*mut u64>() as libc::size_t;
-            let v: *mut u64 = stdlib::malloc(size) as *mut u64;
+            let v: *mut u64 = libc::malloc(size) as *mut u64;
             match virt::virConnectGetLibVersion(self.conn, v) != -1 {
                 true => {
                     let ver = v;
-                    stdlib::free(v as *mut libc::types::common::c95::c_void);
+                    libc::free(v as *mut libc::c_void);
                     Ok(ver as u64)
                 },
                 false => {
-                    stdlib::free(v as *mut libc::types::common::c95::c_void);
+                    libc::free(v as *mut libc::c_void);
                     Err(VirError::new())
                 },
             }
@@ -183,7 +181,7 @@ impl Connection {
                     for id in n.to_vec() {
                         list.push(id as i32);
                     }
-                    stdlib::free(ids as *mut libc::types::common::c95::c_void);
+                    libc::free(ids as *mut libc::c_void);
                     Ok(list)
                 },
                 false => Err(VirError::new())
@@ -220,11 +218,11 @@ impl Connection {
                     for dom in d.to_vec() {
                         list.push(VirDomain{ptr: dom});
                     }
-                    stdlib::free(doms as *mut libc::types::common::c95::c_void);
+                    libc::free(doms as *mut libc::c_void);
                     Ok(list)
                 },
                 false => {
-                    stdlib::free(doms as *mut libc::types::common::c95::c_void);
+                    libc::free(doms as *mut libc::c_void);
                     Err(VirError::new())
                 }
             }

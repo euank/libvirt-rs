@@ -2,7 +2,7 @@ use std::ffi::*;
 use std::{string, ptr, mem};
 use virt;
 use error::VirError;
-use libc::funcs::c95::stdlib;
+use libc;
 
 struct VirStoragePool {
     ptr: virt::virStoragePoolPtr

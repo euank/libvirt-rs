@@ -1,11 +1,9 @@
-extern crate libc;
-
 use std::ffi::*;
 use std::{string, ptr, mem};
 use node;
 use virt;
 use error::VirError;
-use libc::funcs::c95::stdlib;
+use libc;
 
 #[derive(Clone)]
 pub struct VirDomain {
@@ -202,9 +200,9 @@ impl VirDomain {
     pub fn interface_stat(self, name: &str) -> Result<VirDomainInterfaceStats, VirError> {
         unsafe {
             let path = CString::new(name).unwrap();
-            let size = mem::size_of::<virt::virDomainInterfaceStatsStruct>() as libc::size_t;
-            let stats: virt::virDomainInterfaceStatsPtr = stdlib::malloc(size) as virt::virDomainInterfaceStatsPtr;
-            let results = virt::virDomainInterfaceStats(self.ptr, path.as_ptr(), stats, size);
+            let size = mem::size_of::<virt::virDomainInterfaceStatsStruct>();
+            let stats: virt::virDomainInterfaceStatsPtr = libc::malloc(size) as virt::virDomainInterfaceStatsPtr;
+            let results = virt::virDomainInterfaceStats(self.ptr, path.as_ptr(), stats, size as u64);
             if results != -1 {
                 let vs = VirDomainInterfaceStats {
                             rx_bytes:   (*stats).rx_bytes,
@@ -216,10 +214,10 @@ impl VirDomain {
                         	tx_errs:    (*stats).tx_errs,
                         	tx_drop:    (*stats).tx_drop,
                 };
-                stdlib::free(stats as *mut libc::types::common::c95::c_void);
+                libc::free(stats as *mut libc::c_void);
                 Ok(vs)
             } else {
-                stdlib::free(stats as *mut libc::types::common::c95::c_void);
+                libc::free(stats as *mut libc::c_void);
                 Err(VirError::new())
             }
         }
@@ -230,18 +228,18 @@ impl VirDomain {
             let ssize = mem::size_of::<*mut i32>() as libc::size_t;
             let rsize = mem::size_of::<*mut i32>() as libc::size_t;
 
-            let state: *mut i32 = stdlib::malloc(ssize) as *mut i32;
-            let reason: *mut i32 = stdlib::malloc(rsize) as *mut i32;
+            let state: *mut i32 = libc::malloc(ssize) as *mut i32;
+            let reason: *mut i32 = libc::malloc(rsize) as *mut i32;
             let result = virt::virDomainGetState(self.ptr, state, reason, 0);
             if result == -1 {
-                stdlib::free(state as *mut libc::types::common::c95::c_void);
-                stdlib::free(reason as *mut libc::types::common::c95::c_void);
+                libc::free(state as *mut libc::c_void);
+                libc::free(reason as *mut libc::c_void);
                 return Err(VirError::new());
             }
             let s = state;
             let r = reason;
-            stdlib::free(state as *mut libc::types::common::c95::c_void);
-            stdlib::free(reason as *mut libc::types::common::c95::c_void);
+            libc::free(state as *mut libc::c_void);
+            libc::free(reason as *mut libc::c_void);
             return Ok(vec![*s, *r]);
         }
     }
@@ -259,16 +257,16 @@ impl VirDomain {
     pub fn get_info(self) -> Result<VirDomainInfo, VirError> {
         unsafe {
             let size = mem::size_of::<virt::virDomainInfo>() as libc::size_t;
-            let info: *mut virt::virDomainInfo = stdlib::malloc(size) as *mut virt::virDomainInfo;
+            let info: *mut virt::virDomainInfo = libc::malloc(size) as *mut virt::virDomainInfo;
 
             match virt::virDomainGetInfo(self.ptr, info) != -1 {
                 true => {
                     let d = VirDomainInfo{ptr: info};
-                    stdlib::free(info as *mut libc::types::common::c95::c_void);
+                    libc::free(info as *mut libc::c_void);
                     Ok(d)
                 },
                 false => {
-                    stdlib::free(info as *mut libc::types::common::c95::c_void);
+                    libc::free(info as *mut libc::c_void);
                     Err(VirError::new())
                 }
             }
